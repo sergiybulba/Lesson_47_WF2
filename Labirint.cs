@@ -13,6 +13,9 @@ namespace Maze
         public int StartY { get; set; }
         public int countFormMedal = 0; public int countCharMedal = 0;   // медалі на формі і медалі, зібрані героєм
         public int health = 100;    // здоров'я
+        public int steps = 0;       // кроки
+        public DateTime timeStart = new DateTime(); // час гри
+
 
         int height; // высота лабиринта (количество строк)
         int width; // ширина лабиринта (количество столбцов в каждой строке)

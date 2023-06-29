@@ -1,4 +1,4 @@
-﻿/* WinForms, homework № 2, 10.06.2023												
+﻿/* WinForms, homework № 3, 17.06.2023												
 												
 task № 1: Labirint	
  
@@ -15,6 +15,9 @@ task № 1: Labirint
 Додати новий тип об'єктів лабіринту - "ліки", який при зборі поправляє здоров'я на 5%. Здоров'я персонажа не 
 може бути більше 100%, тобто якщо здоров'я вже на максимумі, то ліки не можна підібрати. Якщо здоров'я 
 закінчилося (упало до 0%) - гра закінчується поразкою (вивести діалог із повідомленням "ураження - закінчилося здоров'я").
+
+4. До проекту гри Лабіринт додати StatusStrip на форму. Вивести у статус-стрип кількість очок здоров'я, 
+ігровий час (скільки часу запущено рівень), кількість кроків, які зробив ГГ (колобок).
  */
 
 
@@ -39,6 +42,7 @@ namespace Maze
             InitializeComponent();
             Options();
             StartGame();
+            timer1.Start();
         }
 
         public void Options()
@@ -47,7 +51,7 @@ namespace Maze
             BackColor = Color.FromArgb(255, 92, 118, 137);
 
             // размеры клиентской области формы (того участка, на котором размещаются ЭУ)
-            ClientSize = new Size(columns * pictureSize, rows * pictureSize);
+            ClientSize = new Size(columns * pictureSize, rows * pictureSize + statusStrip1.Height);
 
             StartPosition = FormStartPosition.CenterScreen;
         }
@@ -95,7 +99,7 @@ namespace Maze
                     l.CharX++;
                     SwapChar();         // зміна сусідньої клітинки на char
                 }
-                Text = "Maze  medal(s): f-" + l.countFormMedal + ", c-" + l.countCharMedal + ", h-" + l.health + "%";
+                Text = "Maze  medal(s): f-" + l.countFormMedal + ", c-" + l.countCharMedal;
                 CheckHealth();          // перевірка стану здоров'я
                 CheckMedalWin();        // перевірка на виграш коли зібрані всі медальки
                 CheckFinishWin();       // перевірка на виграш коли знайдено вихід
@@ -137,7 +141,7 @@ namespace Maze
                     l.CharX--;
                     SwapChar();         // зміна сусідньої клітинки на char
                 }
-                Text = "Maze  medal(s): f-" + l.countFormMedal + ", c-" + l.countCharMedal + ", h-" + l.health + "%";
+                Text = "Maze  medal(s): f-" + l.countFormMedal + ", c-" + l.countCharMedal;
                 CheckHealth();
                 CheckMedalWin();
                 CheckFinishWin();
@@ -173,14 +177,13 @@ namespace Maze
                         SwapChar();         // зміна сусідньої клітинки на char
                     }
                 }
-                else if (l.objects[l.CharY - 1, l.CharX].type ==
-                   MazeObject.MazeObjectType.HALL) // проверяем ячейку вверх на 1 позицию, является ли она коридором
+                else if (l.objects[l.CharY - 1, l.CharX].type == MazeObject.MazeObjectType.HALL) // проверяем ячейку вверх на 1 позицию, является ли она коридором
                 {
                     SwapHall();         // зміна поточної клітинки на hall
                     l.CharY--;
                     SwapChar();         // зміна сусідньої клітинки на char
                 }
-                Text = "Maze  medal(s): f-" + l.countFormMedal + ", c-" + l.countCharMedal + ", h-" + l.health + "%";
+                Text = "Maze  medal(s): f-" + l.countFormMedal + ", c-" + l.countCharMedal;
                 CheckHealth();
                 CheckMedalWin();
                 CheckFinishWin();
@@ -222,17 +225,21 @@ namespace Maze
                     l.CharY++;
                     SwapChar();         // зміна сусідньої клітинки на char
                 }
-                Text = "Maze  medal(s): f-" + l.countFormMedal + ", c-" + l.countCharMedal + ", h-" + l.health + "%";
+                Text = "Maze  medal(s): f-" + l.countFormMedal + ", c-" + l.countCharMedal;
                 CheckHealth();
                 CheckMedalWin();
                 CheckFinishWin();
             }
+            if (l.steps == 1)               // запуск секундоміра гри
+                l.timeStart = System.DateTime.Now;
         }
 
         private void CheckHealth()           // перевірка чи в героя залишилося здоров'я
         {
             if (l.health <= 0)
             {
+                toolStripStatusLabel2.Text = "steps: " + l.steps + ",";     // відображення останнього кроку
+                timer1.Stop();
                 MessageBox.Show("Oops... You lost! There's no health");
                 this.Close();
             }
@@ -242,6 +249,8 @@ namespace Maze
             if ((l.CharX == 0 || l.CharX == columns-1 || l.CharY == 0 || l.CharY == rows - 1) // якщо досягнуто краю лабіринту, і ця клітинка - не стартова
                 && (l.CharX != l.StartX && l.CharY != l.StartY))
             {
+                toolStripStatusLabel2.Text = "steps: " + l.steps + ",";     // відображення останнього кроку
+                timer1.Stop(); 
                 MessageBox.Show("Congratulation! You won! Exit has found!");
                 this.Close();
             }
@@ -250,6 +259,8 @@ namespace Maze
         {
             if (l.countFormMedal != 0 && l.countCharMedal == l.countFormMedal)
             {
+                toolStripStatusLabel2.Text = "steps: " + l.steps + ",";     // відображення останнього кроку
+                timer1.Stop(); 
                 MessageBox.Show("Congratulation! You won! Medals are collected!");
                 this.Close();
             }
@@ -259,12 +270,21 @@ namespace Maze
             l.objects[l.CharY, l.CharX].texture = MazeObject.images[(int)MazeObject.MazeObjectType.HALL]; // hall
             l.images[l.CharY, l.CharX].BackgroundImage = l.objects[l.CharY, l.CharX].texture;
             l.objects[l.CharY, l.CharX].type = MazeObject.MazeObjectType.HALL;
+            l.steps++;      // підрахунок кроків
         }
         private void SwapChar()                 // метод для зміни поточної клітинки на char
         {
             l.objects[l.CharY, l.CharX].texture = MazeObject.images[(int)MazeObject.MazeObjectType.CHAR]; // character
             l.images[l.CharY, l.CharX].BackgroundImage = l.objects[l.CharY, l.CharX].texture;
             l.objects[l.CharY, l.CharX].type = MazeObject.MazeObjectType.CHAR;
+        }
+
+        private void timer1_Tick(object sender, System.EventArgs e)         // подія таймеру - відображення інформація statusStrip 
+        {
+            toolStripStatusLabel1.Text = "Health: " + l.health + "%," ;
+            toolStripStatusLabel2.Text = "steps: " + l.steps + ",";
+            if (l.steps >= 1)
+                toolStripStatusLabel3.Text = "time: " + (System.DateTime.Now - l.timeStart).Seconds + " seconds";
         }
     }
 }
